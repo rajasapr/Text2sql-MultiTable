@@ -29,7 +29,7 @@ conn = sqlite3.connect(db_path)
 
 #Read all the tables
 
-tables = pd.read_sql("SELECT name FROM sqlite_master WHERE type='table';",conn)
+table_names= pd.read_sql("SELECT name FROM sqlite_master WHERE type='table';",conn)
 
 
 #-- from here i need to do  -- 
@@ -39,10 +39,10 @@ tables = pd.read_sql("SELECT name FROM sqlite_master WHERE type='table';",conn)
 
 
 # Read  5 sample from the database
+sample_date = []
 
-conn = sqlite3.connect(db_path)
-
-sample_data = pd.read_sql(f"select * from {Table_name} limit 5",conn)
+for i,table in enumerate(table_names):
+        sample_date[i] = pd.read_sql(f"select * from {table_names} limit 5",conn)
 
 print(sample_data.head())
 
