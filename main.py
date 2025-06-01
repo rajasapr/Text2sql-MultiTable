@@ -11,6 +11,7 @@ import pandas as pd
 import json 
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
+from langchain_groq import ChatGroq
 import os
 from dotenv import load_dotenv
 import ingestion
@@ -19,7 +20,7 @@ load_dotenv()
 
 #user question
 
-question = "Get me the number of users in Charlotte"
+question = "Get me the review for user Daniel Molina "
 db_path = "csvchatbot.db"
  
 
@@ -39,23 +40,22 @@ table_names= pd.read_sql("SELECT name FROM sqlite_master WHERE type='table';",co
 
 
 
-# Read  5 sample rows and coloumn name of table  from the database
+# Read  2 sample rows and coloumn name of table  from the database into dictionary
+sample_data = {}
+table_columns = {}
+for table in table_names["name"]:
+    sample_data[table]= pd.read_sql(f"select * from {table} limit 2",conn)
+    table_columns[table] =sample_data[table].columns.to_list()
 
-for table in table_names:
-        sample_date[table] = pd.read_sql(f"select * from {table} limit 5",conn)
-        table_columns[table] = sample_data.columns.to_list()
 
-#print(sample_data.head())
-
-# Read Column names
-
-table_columns = sample_data.columns.to_list()
-print(table_columns)
-
+# Need to create 
+ 
 
 # Connecting to LLM
 #openai_api_key = os.getenv("OPENAI_API_KEY")
-llm = ChatOpenAI(temperature=0,model="gpt-4")
+llm = ChatOpenAI(temperature=0,model="gpt-3.5-turbo")
+
+
 
 
 prompt_schema = PromptTemplate(
@@ -69,11 +69,11 @@ prompt_schema = PromptTemplate(
         
         please create output with 
         give me list of
-        Column name : column  dataype ,manatory or not,column description 
-
+        Table :
+        Column(write actual column name instead of column) : dataype ,manatory or not,column description 
+        
         donot give me any additional information or white spaces 
              """
-
     )
     
 )
@@ -95,9 +95,9 @@ first_response = response.content
 
 
 prompt_query = PromptTemplate(
-    input_variables=["first_response","question","table"],
+    input_variables=["first_response","sample_rows","question","table"],
     template=(
-        """You are an expert in SQL and database management. Here are the descriptions for each column and their names. {first_response} and here is the table name {table}
+        """You are an expert in SQL and database management. Here are the descriptions for each column and their names . {first_response} , providing same rows of table {sample_rows}, here is the list of tables which includes table name and coloumns {table}
         
         Generate a SQL query based on user question {question}
         give me only a sqlite syntax/query with no additional information
@@ -108,8 +108,9 @@ chain_2 = prompt_query|llm
 response_2 = chain_2.invoke(
     {
         "first_response": first_response,
+        "sample_rows" :sample_data,
         "question": question,
-        "table": Table_name
+        "table": table_columns
     }
 )
 print(response_2.content)
