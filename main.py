@@ -29,6 +29,7 @@ conn = sqlite3.connect(db_path)
 
 #Read all the tables
 
+
 table_names= pd.read_sql("SELECT name FROM sqlite_master WHERE type='table';",conn)
 
 
@@ -38,13 +39,13 @@ table_names= pd.read_sql("SELECT name FROM sqlite_master WHERE type='table';",co
 
 
 
-# Read  5 sample from the database
-sample_date = []
+# Read  5 sample rows and coloumn name of table  from the database
 
-for i,table in enumerate(table_names):
-        sample_date[i] = pd.read_sql(f"select * from {table_names} limit 5",conn)
+for table in table_names:
+        sample_date[table] = pd.read_sql(f"select * from {table} limit 5",conn)
+        table_columns[table] = sample_data.columns.to_list()
 
-print(sample_data.head())
+#print(sample_data.head())
 
 # Read Column names
 
